@@ -66,7 +66,7 @@
         android:layout_marginEnd="@dimen/spacing_medium"
         android:orientation="vertical"
         app:layout_constraintBottom_toTopOf="@+id/playback_seek_bar"
-        app:layout_constraintEnd_toStartOf="@+id/playback_more"
+        app:layout_constraintEnd_toStartOf="@+id/playback_favorite"
         app:layout_constraintHorizontal_bias="0.5"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/playback_toolbar"
@@ -89,15 +89,20 @@
             android:fallbackLineSpacing="false"
             tools:text="Artist Name" />
 
-        <TextView
-            android:id="@+id/playback_album"
-            style="@style/Widget.Auxio.TextView.Secondary.Marquee"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:fallbackLineSpacing="false"
-            tools:text="Album Name" />
-
     </LinearLayout>
+
+    <org.oxycblt.auxio.ui.RippleFixMaterialButton
+        android:id="@+id/playback_favorite"
+        style="@style/Widget.Auxio.Button.Playback.More"
+        app:materialSizeOverlay="@style/SizeOverlay.Material3Expressive.Button.IconButton.Small"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:contentDescription="@string/desc_favorite"
+        app:icon="@drawable/sel_favorite_state_24"
+        app:iconTint="@color/sel_favorite_icon"
+        app:layout_constraintBottom_toBottomOf="@+id/playback_info_container"
+        app:layout_constraintEnd_toStartOf="@+id/playback_more"
+        app:layout_constraintTop_toTopOf="@+id/playback_info_container" />
 
     <org.oxycblt.auxio.ui.RippleFixMaterialButton
         android:id="@+id/playback_more"

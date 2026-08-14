@@ -15,4 +15,8 @@
     <color name="widget_on_surface_inverse">@color/material_dynamic_neutral95</color>
 
     <color name="dynamic_primary">@color/m3_ref_palette_dynamic_primary40</color>
+
+    <!-- Deliberately outside the accent palette, as a favorited star reads as gold regardless
+         of the theme the user picked. -->
+    <color name="favorite_star">#FFC107</color>
 </resources>

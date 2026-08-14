@@ -123,6 +123,7 @@
     <string name="lbl_shuffle">Shuffle</string>
     <string name="lbl_no_lyrics">No lyrics</string>
     <string name="lbl_add">Add</string>
+    <string name="desc_favorite">Favorite</string>
 
     <string name="lbl_queue">Queue</string>
     <string name="lbl_play_next">Play next</string>

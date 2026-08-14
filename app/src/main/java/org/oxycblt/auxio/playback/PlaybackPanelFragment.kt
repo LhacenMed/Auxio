@@ -142,10 +142,6 @@ class PlaybackPanelFragment :
             isSelected = true
             setOnClickListener { navigateToCurrentArtist() }
         }
-        binding.playbackAlbum?.apply {
-            isSelected = true
-            setOnClickListener { navigateToCurrentAlbum() }
-        }
 
         binding.playbackLyrics?.setOnClickListener { setLyricsExpanded(true) }
         binding.playbackLyricsOverlay?.setOnClickListener { setLyricsExpanded(false) }
@@ -170,6 +166,7 @@ class PlaybackPanelFragment :
         }
         binding.playbackSkipNext.setOnClickListener { playbackModel.next() }
         binding.playbackShuffle.setOnClickListener { playbackModel.toggleShuffled() }
+        binding.playbackFavorite?.setOnClickListener { it.isActivated = !it.isActivated }
         binding.playbackMore?.setOnClickListener {
             playbackModel.song.value?.let {
                 listModel.openMenu(R.menu.playback_song, it, PlaySong.ByItself)
@@ -227,7 +224,6 @@ class PlaybackPanelFragment :
         binding.playbackRepeat.clearPendingIcon()
         binding.playbackSong.isSelected = false
         binding.playbackArtist.isSelected = false
-        binding.playbackAlbum?.isSelected = false
         binding.playbackToolbar.setOnMenuItemClickListener(null)
         userAwarePagerCallback?.release()
         binding.playbackPager?.adapter = null
@@ -272,7 +268,6 @@ class PlaybackPanelFragment :
         L.d("Updating song display: $song")
         binding.playbackSong.text = song.name.resolve(context)
         binding.playbackArtist.text = song.artists.resolveNames(context)
-        binding.playbackAlbum?.text = song.album.name.resolve(context)
         binding.playbackSeekBar?.durationDs = song.durationMs.msToDs()
     }
 
@@ -440,10 +435,6 @@ class PlaybackPanelFragment :
 
     private fun navigateToCurrentArtist() {
         playbackModel.song.value?.let(detailModel::showArtist)
-    }
-
-    private fun navigateToCurrentAlbum() {
-        playbackModel.song.value?.let { detailModel.showAlbum(it.album) }
     }
 
     private companion object {
