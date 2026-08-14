@@ -21,22 +21,28 @@ package org.oxycblt.auxio.playback.ui.lyrics
 import android.content.Context
 import android.util.AttributeSet
 import android.util.DisplayMetrics
+import android.view.GestureDetector
 import android.view.LayoutInflater
+import android.view.MotionEvent
 import android.widget.FrameLayout
 import androidx.core.view.isInvisible
+import androidx.core.view.updatePadding
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.LinearSmoothScroller
+import androidx.recyclerview.widget.RecyclerView
 import org.oxycblt.auxio.R
 import org.oxycblt.auxio.databinding.ViewLyricsBinding
 import org.oxycblt.musikr.lyrics.Lyrics
 import org.oxycblt.musikr.lyrics.TimedLine
 
 /**
- * The lyrics section of the playback panel.
+ * A scrolling window onto a song's lyric lines, rendered at the given `lyricsDensity`.
  *
- * The view is a fixed-height window onto the lyric lines, so it occupies exactly the same space
- * whether the song has synced lyrics, plain lyrics, or none at all. Synced lyrics highlight and
- * auto-center the active line as playback advances; plain lyrics are simply scrollable.
+ * The view is a fixed-height window, so it occupies exactly the same space whether the song has
+ * synced lyrics, plain lyrics, or none at all. Synced lyrics highlight and auto-center the active
+ * line as playback advances; plain lyrics are simply scrollable. Blank space above the first line
+ * and below the last lets either of them reach the center, and the edges fade into the background
+ * so only the lines around the active one read clearly.
  *
  * @author Alexander Capehart (OxygenCobalt)
  */
@@ -45,23 +51,76 @@ class LyricsView
 constructor(context: Context, attrs: AttributeSet? = null, defStyleAttr: Int = 0) :
     FrameLayout(context, attrs, defStyleAttr) {
     private val binding = ViewLyricsBinding.inflate(LayoutInflater.from(context), this)
-    private val lyricsAdapter = LyricsAdapter()
+    private val density = context.resolveLyricsDensity(attrs)
+    private val lyricsAdapter = LyricsAdapter(density)
     private val layoutManager = LinearLayoutManager(context)
-    private val lineHeight = context.resources.getDimensionPixelSize(R.dimen.size_lyric_line)
+    private val lineHeight = context.resources.getDimensionPixelSize(density.lineHeight)
+    private val tapDetector =
+        GestureDetector(
+            context,
+            object : GestureDetector.SimpleOnGestureListener() {
+                override fun onSingleTapUp(e: MotionEvent): Boolean {
+                    performClick()
+                    return false
+                }
+            },
+        )
 
     private var timedLines: List<TimedLine> = emptyList()
     private var activeIndex = LyricsAdapter.NO_ACTIVE
 
     init {
+        // A View draws it's fading edges inside it's padding box, so the fade has to live on
+        // this container rather than on the deliberately padded list, or it would land over the
+        // middle of the window instead of at the top and bottom of it.
+        isVerticalFadingEdgeEnabled = true
+        setFadingEdgeLength(context.resources.getDimensionPixelSize(density.fadeLength))
+        setWillNotDraw(false)
+
         binding.lyricsRecycler.apply {
             adapter = lyricsAdapter
             layoutManager = this@LyricsView.layoutManager
-            // The panel lives inside a bottom sheet, so leave nested drags to the sheet.
+            // The sheet only ever registers one scrolling child, and that role belongs to the
+            // queue. Staying out of nested scrolling leaves it there; this list claims it's own
+            // gestures below instead.
             isNestedScrollingEnabled = false
             // Rows never change size, and animating them would fight the auto-scroll.
             itemAnimator = null
             setHasFixedSize(true)
+            // Watch for taps without ever claiming the touch, so scrolling still works.
+            addOnItemTouchListener(
+                object : RecyclerView.SimpleOnItemTouchListener() {
+                    override fun onInterceptTouchEvent(rv: RecyclerView, e: MotionEvent): Boolean {
+                        tapDetector.onTouchEvent(e)
+                        if (e.actionMasked == MotionEvent.ACTION_DOWN) {
+                            // The sheet's drag helper claims vertical drags over anything it
+                            // does not recognize as scrolling content, so the list has to take
+                            // the gesture up front or it will never scroll. With nothing to
+                            // scroll there is no gesture worth taking, and the drag is left to
+                            // the sheet so the area never becomes dead to it.
+                            val isScrollable =
+                                rv.canScrollVertically(-1) || rv.canScrollVertically(1)
+                            rv.parent.requestDisallowInterceptTouchEvent(isScrollable)
+                        }
+                        return false
+                    }
+                }
+            )
         }
+    }
+
+    // The fade is a fixed part of the window's look rather than a scroll affordance, so it holds
+    // at full strength instead of tapering off at either end of the list.
+    override fun getTopFadingEdgeStrength() = 1f
+
+    override fun getBottomFadingEdgeStrength() = 1f
+
+    override fun onSizeChanged(w: Int, h: Int, oldw: Int, oldh: Int) {
+        super.onSizeChanged(w, h, oldw, oldh)
+        // The blank run above the first line and below the last one. Sized so that either can be
+        // scrolled all the way to the center of the window.
+        val blank = ((h - lineHeight) / 2).coerceAtLeast(0)
+        binding.lyricsRecycler.updatePadding(top = blank, bottom = blank)
     }
 
     /**
@@ -133,14 +192,9 @@ constructor(context: Context, attrs: AttributeSet? = null, defStyleAttr: Int = 0
 
     /** Place [index] in the middle of the window without animating. */
     private fun jumpTo(index: Int) {
-        val viewport = binding.lyricsRecycler.height
-        if (viewport == 0) {
-            // Not laid out yet, so the centering offset isn't known. Being visible is enough;
-            // the next line change will center it properly.
-            layoutManager.scrollToPosition(index)
-        } else {
-            layoutManager.scrollToPositionWithOffset(index, (viewport - lineHeight) / 2)
-        }
+        // The blank run applied in onSizeChanged already offsets the list, so seating the line
+        // against the start of it leaves the line centered.
+        layoutManager.scrollToPositionWithOffset(index, 0)
     }
 
     /** Glide [index] into the middle of the window. */
@@ -150,6 +204,13 @@ constructor(context: Context, attrs: AttributeSet? = null, defStyleAttr: Int = 0
             CenterSmoothScroller(context).apply { targetPosition = index }
         )
     }
+}
+
+private fun Context.resolveLyricsDensity(attrs: AttributeSet?): LyricsDensity {
+    val styled = obtainStyledAttributes(attrs, R.styleable.LyricsView)
+    val ordinal = styled.getInt(R.styleable.LyricsView_lyricsDensity, LyricsDensity.COMPACT.ordinal)
+    styled.recycle()
+    return LyricsDensity.entries[ordinal]
 }
 
 /** A [LinearSmoothScroller] that centers it's target and moves at a reading-friendly pace. */

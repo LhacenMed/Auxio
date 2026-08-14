@@ -30,6 +30,7 @@ import android.view.View
 import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.widget.Toolbar
+import androidx.core.view.isInvisible
 import androidx.core.view.updatePadding
 import androidx.dynamicanimation.animation.SpringForce
 import androidx.fragment.app.activityViewModels
@@ -84,6 +85,7 @@ class PlaybackPanelFragment :
     private var equalizerLauncher: ActivityResultLauncher<Intent>? = null
     private var userAwarePagerCallback: UserAwarePagerCallback? = null
     private var currentPagerPosition = 0
+    private var isLyricsExpanded = false
 
     override fun onCreateBinding(inflater: LayoutInflater) =
         FragmentPlaybackPanelBinding.inflate(inflater)
@@ -148,6 +150,11 @@ class PlaybackPanelFragment :
             isSelected = true
             setOnClickListener { navigateToCurrentAlbum() }
         }
+
+        binding.playbackLyrics?.setOnClickListener { setLyricsExpanded(true) }
+        binding.playbackLyricsOverlay?.setOnClickListener { setLyricsExpanded(false) }
+        // The binding is new, so re-assert whichever side was showing before it was recreated.
+        applyLyricsExpansion(animated = false)
 
         binding.playbackSeekBar?.listener = this
 
@@ -284,14 +291,55 @@ class PlaybackPanelFragment :
         val binding = requireBinding()
         binding.playbackSeekBar?.positionDs = positionDs
         // The position flow already ticks every deci-second, which is more than enough
-        // resolution to follow synced lyrics without a timer of their own.
-        binding.playbackLyrics?.seekTo(positionDs.dsToMs())
+        // resolution to follow synced lyrics without a timer of their own. Both views are fed
+        // even while hidden, so expanding always reveals an already-centered line.
+        val positionMs = positionDs.dsToMs()
+        binding.playbackLyrics?.seekTo(positionMs)
+        binding.playbackLyricsOverlay?.seekTo(positionMs)
     }
 
     private fun updateLyrics(state: LyricsState) {
+        val binding = requireBinding()
         // Lyrics can finish loading while paused, so seed the active line from the current
         // position instead of waiting for the next tick.
-        requireBinding().playbackLyrics?.update(state, playbackModel.positionDs.value.dsToMs())
+        val positionMs = playbackModel.positionDs.value.dsToMs()
+        binding.playbackLyrics?.update(state, positionMs)
+        binding.playbackLyricsOverlay?.update(state, positionMs)
+    }
+
+    /**
+     * Cross-fade the cover art and the lyrics strip with the reading view that stands in for them.
+     * Both occupy the same rectangle, so nothing else in the panel moves.
+     */
+    private fun setLyricsExpanded(expanded: Boolean) {
+        // Layouts without a lyrics section have nothing to expand into, so the cover art tap
+        // must not leave this flag pointing at a view that isn't there.
+        if (isLyricsExpanded == expanded || requireBinding().playbackLyricsOverlay == null) return
+        isLyricsExpanded = expanded
+        applyLyricsExpansion(animated = true)
+    }
+
+    private fun applyLyricsExpansion(animated: Boolean) {
+        val binding = requireBinding()
+        val overlay = binding.playbackLyricsOverlay ?: return
+        binding.playbackPager?.fadeTo(if (isLyricsExpanded) 0f else 1f, animated)
+        binding.playbackLyrics?.fadeTo(if (isLyricsExpanded) 0f else 1f, animated)
+        overlay.fadeTo(if (isLyricsExpanded) 1f else 0f, animated)
+    }
+
+    private fun View.fadeTo(target: Float, animated: Boolean) {
+        animate().cancel()
+        if (!animated) {
+            alpha = target
+            isInvisible = target == 0f
+            return
+        }
+        // Both sides must be drawn for the duration of the fade, so only the one that ends up
+        // hidden is taken out of the pass, and only once it is fully transparent.
+        isInvisible = false
+        animate().alpha(target).setDuration(LYRICS_FADE_DURATION_MS).withEndAction {
+            isInvisible = target == 0f
+        }
     }
 
     private fun updateRepeat(repeatMode: RepeatMode) {
@@ -402,6 +450,10 @@ class PlaybackPanelFragment :
         playbackModel.song.value?.let { detailModel.showAlbum(it.album) }
     }
 
+    override fun onSingleTap() {
+        setLyricsExpanded(true)
+    }
+
     override fun seek(direction: Direction) {
         when (direction) {
             Direction.FORWARDS -> playbackModel.stepForward()
@@ -409,5 +461,7 @@ class PlaybackPanelFragment :
         }
     }
 
-    private companion object {}
+    private companion object {
+        const val LYRICS_FADE_DURATION_MS = 200L
+    }
 }

@@ -19,6 +19,11 @@
          whether the playing song has lyrics or not. -->
     <dimen name="size_lyric_line">26dp</dimen>
     <dimen name="size_lyrics_section">78dp</dimen>
+    <dimen name="size_lyric_fade">40dp</dimen>
+    <!-- The nominal height of a single unwrapped line in the expanded reading view. Only used
+         to blank out enough space for the first and last line to reach the center. -->
+    <dimen name="size_lyric_line_large">52dp</dimen>
+    <dimen name="size_lyric_fade_large">128dp</dimen>
 
     <dimen name="size_hero_small">128dp</dimen>
     <dimen name="size_hero_medium">192dp</dimen>

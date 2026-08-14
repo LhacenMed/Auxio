@@ -45,6 +45,19 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/playback_pager" />
 
+    <org.oxycblt.auxio.playback.ui.lyrics.LyricsOverlay
+        android:id="@+id/playback_lyrics_overlay"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        android:layout_marginStart="@dimen/spacing_medium"
+        android:layout_marginEnd="@dimen/spacing_medium"
+        android:alpha="0"
+        android:visibility="invisible"
+        app:layout_constraintBottom_toBottomOf="@+id/playback_lyrics"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="@+id/playback_pager" />
+
     <LinearLayout
         android:id="@+id/playback_info_container"
         android:layout_width="0dp"

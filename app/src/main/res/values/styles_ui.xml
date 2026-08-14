@@ -289,6 +289,18 @@
         <item name="android:alpha">0.6</item>
     </style>
 
+    <!-- Lines wrap rather than ellipsize here, as the reading view has the room for it. -->
+    <style name="Widget.Auxio.TextView.Lyric.Large" parent="Widget.Auxio.TextView.Base">
+        <item name="android:gravity">center</item>
+        <item name="android:textAlignment">center</item>
+        <item name="android:paddingStart">@dimen/spacing_medium</item>
+        <item name="android:paddingEnd">@dimen/spacing_medium</item>
+        <item name="android:paddingTop">@dimen/spacing_mid_medium</item>
+        <item name="android:paddingBottom">@dimen/spacing_mid_medium</item>
+        <item name="android:textAppearance">?attr/textAppearanceTitleLarge</item>
+        <item name="android:textColor">@color/sel_lyric_line</item>
+    </style>
+
     <style name="Widget.Auxio.TextView.Header" parent="Widget.Auxio.TextView.Base">
         <item name="android:paddingStart">@dimen/spacing_medium</item>
         <item name="android:paddingTop">@dimen/spacing_small</item>

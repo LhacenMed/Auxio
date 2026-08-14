@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="utf-8"?>
+<merge xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    tools:parentTag="android.widget.FrameLayout">
+
+    <org.oxycblt.auxio.playback.ui.lyrics.LyricsView
+        android:id="@+id/lyrics_list"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        app:lyricsDensity="expanded" />
+
+    <LinearLayout
+        android:id="@+id/lyrics_empty_group"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center"
+        android:gravity="center_horizontal"
+        android:orientation="vertical">
+
+        <TextView
+            style="@style/Widget.Auxio.TextView.Lyric.Placeholder"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="@dimen/spacing_large"
+            android:text="@string/lbl_no_lyrics" />
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/lyrics_search"
+            style="@style/Widget.Auxio.Button.Primary"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="@dimen/spacing_small"
+            android:text="@string/lbl_search" />
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/lyrics_add"
+            style="@style/Widget.Auxio.Button.OutlinedButton"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/lbl_add" />
+
+    </LinearLayout>
+
+</merge>

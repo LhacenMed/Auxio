@@ -7,6 +7,7 @@
         android:id="@+id/lyrics_recycler"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
+        android:clipToPadding="false"
         android:overScrollMode="never"
         android:scrollbars="none"
         tools:itemCount="3"

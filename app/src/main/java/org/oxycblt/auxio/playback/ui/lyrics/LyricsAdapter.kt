@@ -23,15 +23,16 @@ import android.view.LayoutInflater
 import android.view.ViewGroup
 import android.widget.TextView
 import androidx.recyclerview.widget.RecyclerView
-import org.oxycblt.auxio.databinding.ItemLyricLineBinding
 
 /**
- * Renders lyric lines for [LyricsView]. Timing is not this adapter's concern: it only knows which
- * line is currently active, so plain and synced lyrics share the exact same rendering path.
+ * Renders lyric lines for [LyricsView] at the given [density]. Timing is not this adapter's
+ * concern: it only knows which line is currently active, so plain and synced lyrics share the exact
+ * same rendering path.
  *
  * @author Alexander Capehart (OxygenCobalt)
  */
-internal class LyricsAdapter : RecyclerView.Adapter<LyricsLineViewHolder>() {
+internal class LyricsAdapter(private val density: LyricsDensity) :
+    RecyclerView.Adapter<LyricsLineViewHolder>() {
     private var lines: List<String> = emptyList()
     private var activeIndex = NO_ACTIVE
 
@@ -39,7 +40,8 @@ internal class LyricsAdapter : RecyclerView.Adapter<LyricsLineViewHolder>() {
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int) =
         LyricsLineViewHolder(
-            ItemLyricLineBinding.inflate(LayoutInflater.from(parent.context), parent, false).root
+            LayoutInflater.from(parent.context).inflate(density.lineLayout, parent, false)
+                as TextView
         )
 
     override fun onBindViewHolder(holder: LyricsLineViewHolder, position: Int) {
