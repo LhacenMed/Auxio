@@ -83,13 +83,16 @@ dependencies {
 }
 
 tasks.register("assembleTaglib", Exec, {
-    def jniDir = "$projectDir/src/main/cpp"
+    // These paths are interpolated into a command run through `sh`, which treats the
+    // backslashes in Windows paths as escape characters and eats them. Normalise to
+    // forward slashes, which every platform's shell and cmake accept.
+    def jniDir = "$projectDir/src/main/cpp".replace('\\', '/')
     def libs = new File("$jniDir/taglib/pkg")
-    if (libs.exists()) {
-        commandLine "true"
-        return
-    }
-    def ndkDir = androidComponents.sdkComponents.ndkDirectory.get().asFile
+    def ndkDir = androidComponents.sdkComponents.ndkDirectory.get().asFile.toString().replace('\\', '/')
+    // Skip once taglib has been built. This has to be onlyIf rather than a no-op
+    // command: `true` is a real binary on unix but does not exist on Windows, so
+    // spawning it just to do nothing fails with CreateProcess error=2.
+    onlyIf { !libs.exists() }
     commandLine "sh", "-c", "$jniDir/build_taglib.sh $jniDir $ndkDir"
 })
 
