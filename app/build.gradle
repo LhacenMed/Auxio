@@ -8,16 +8,65 @@ plugins {
     id "com.google.devtools.ksp"
 }
 
+// The single source of truth for the app version, rewritten in place by the release
+// pipeline. scripts/lib/version.sh parses and regenerates this exact block, so keep its
+// shape — one field per line, in this order.
+ext.currentVersion = [
+    type        : "Stable",
+    versionMajor: 4,
+    versionMinor: 1,
+    versionPatch: 5,
+    versionBuild: 0,
+]
+
+// Pre-release types carry an iteration counter; stable versions are bare semver. Mirrored
+// by version::name in scripts/lib/version.sh — the two must agree on every type.
+static String toVersionName(Map version) {
+    def core = "${version.versionMajor}.${version.versionMinor}.${version.versionPatch}"
+    switch (version.type) {
+        case "Alpha": return "${core}-alpha.${version.versionBuild}"
+        case "Beta": return "${core}-beta.${version.versionBuild}"
+        case "ReleaseCandidate": return "${core}-rc.${version.versionBuild}"
+        default: return core
+    }
+}
+
+// Absent on any machine that has no signing key (a fresh clone, or CI before the keystore
+// step): release builds simply stay unsigned rather than failing to configure.
+def keystorePropertiesFile = rootProject.file("keystore.properties")
+def keystoreProperties = new Properties()
+if (keystorePropertiesFile.exists()) {
+    keystorePropertiesFile.withInputStream { keystoreProperties.load(it) }
+}
+
 android {
     // Auxio implicitly depends on the native modules, explicitly specify it
     // here so the libraries are still stripped.
     ndkVersion ndk_version
     namespace "org.oxycblt.auxio"
 
+    signingConfigs {
+        release {
+            if (keystorePropertiesFile.exists()) {
+                // Resolved against the app module, matching the ../ prefix written into
+                // keystore.properties. CI writes an absolute path, which is unaffected.
+                storeFile file(keystoreProperties["storeFile"])
+                storePassword keystoreProperties["storePassword"]
+                keyAlias keystoreProperties["keyAlias"]
+                keyPassword keystoreProperties["keyPassword"]
+            }
+        }
+    }
+
     defaultConfig {
         applicationId namespace
-        versionName "4.1.5"
-        versionCode 75
+        versionName toVersionName(currentVersion)
+        // Leaves room for 99 minor and 99 patch releases per major. Pre-release builds
+        // deliberately share their stable version's code: the iteration counter is part of
+        // the name, not the code.
+        versionCode currentVersion.versionMajor * 10000 +
+                currentVersion.versionMinor * 100 +
+                currentVersion.versionPatch
 
         minSdk min_sdk
         // randomly flickers between deprecated and required depending on what mood my gradle is in
@@ -50,6 +99,8 @@ android {
             minifyEnabled true
             shrinkResources true
             proguardFiles getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro"
+
+            if (keystorePropertiesFile.exists()) signingConfig signingConfigs.release
 
             dependenciesInfo {
                 includeInApk = false

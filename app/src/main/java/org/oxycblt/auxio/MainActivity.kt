@@ -26,12 +26,23 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.app.AppCompatDelegate
 import androidx.core.view.WindowCompat
 import androidx.core.view.updatePadding
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.lifecycleScope
+import androidx.lifecycle.repeatOnLifecycle
 import dagger.hilt.android.AndroidEntryPoint
 import javax.inject.Inject
+import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.launch
 import org.oxycblt.auxio.databinding.ActivityMainBinding
 import org.oxycblt.auxio.playback.PlaybackViewModel
 import org.oxycblt.auxio.playback.state.DeferredPlayback
 import org.oxycblt.auxio.ui.UISettings
+import org.oxycblt.auxio.update.AppUpdate
+import org.oxycblt.auxio.update.UpdateChecker
+import org.oxycblt.auxio.update.UpdateDialog
+import org.oxycblt.auxio.update.UpdatePrefs
+import org.oxycblt.auxio.update.UpdateRegistry
+import org.oxycblt.auxio.update.UpdateStore
 import org.oxycblt.auxio.util.isNight
 import org.oxycblt.auxio.util.systemBarInsetsCompat
 import timber.log.Timber as L
@@ -54,6 +65,8 @@ import timber.log.Timber as L
 class MainActivity : AppCompatActivity() {
     private val playbackModel: PlaybackViewModel by viewModels()
     @Inject lateinit var uiSettings: UISettings
+    /** Guards against the prompt re-appearing after a dismissal within the same session. */
+    private var updatePromptShown = false
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -62,6 +75,7 @@ class MainActivity : AppCompatActivity() {
         val binding = ActivityMainBinding.inflate(layoutInflater)
         setContentView(binding.root)
         setupEdgeToEdge(binding.root)
+        setupUpdates()
         L.d("Activity created")
     }
 
@@ -83,6 +97,39 @@ class MainActivity : AppCompatActivity() {
     override fun onNewIntent(intent: Intent) {
         super.onNewIntent(intent)
         startIntentAction(intent)
+    }
+
+    /**
+     * Look for a newer build and let [UpdateDialog] speak for whatever is found. The check is
+     * best-effort and never blocks startup; the prompt is driven off [UpdateRegistry] so a
+     * download already in flight is picked back up rather than restarted.
+     */
+    private fun setupUpdates() {
+        if (UpdatePrefs.autoCheckEnabled(this)) {
+            lifecycleScope.launch {
+                UpdateChecker.check()?.let {
+                    UpdateStore.save(this@MainActivity, it)
+                    UpdateRegistry.setAvailable(it)
+                }
+            }
+        }
+
+        lifecycleScope.launch {
+            repeatOnLifecycle(Lifecycle.State.STARTED) {
+                UpdateRegistry.available
+                    .combine(UpdateRegistry.promptRequest) { update, asked -> update to asked }
+                    .collect { (update, asked) -> showUpdateDialog(update, asked) }
+            }
+        }
+    }
+
+    private fun showUpdateDialog(update: AppUpdate?, asked: Boolean) {
+        if (update == null || supportFragmentManager.findFragmentByTag(TAG_UPDATE) != null) return
+        // Being asked outright outranks both the preference and a dismissal earlier in the
+        // session: asking twice should not be answered with silence.
+        if (!asked && (updatePromptShown || !UpdatePrefs.autoCheckEnabled(this))) return
+        updatePromptShown = true
+        UpdateDialog().show(supportFragmentManager, TAG_UPDATE)
     }
 
     private fun setupTheme() {
@@ -151,5 +198,6 @@ class MainActivity : AppCompatActivity() {
 
     private companion object {
         const val KEY_INTENT_USED = BuildConfig.APPLICATION_ID + ".key.FILE_INTENT_USED"
+        const val TAG_UPDATE = BuildConfig.APPLICATION_ID + ".tag.UPDATE"
     }
 }

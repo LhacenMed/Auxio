@@ -29,6 +29,7 @@ import org.oxycblt.auxio.home.HomeSettings
 import org.oxycblt.auxio.image.ImageSettings
 import org.oxycblt.auxio.playback.PlaybackSettings
 import org.oxycblt.auxio.ui.UISettings
+import org.oxycblt.auxio.update.UpdateManager
 import org.oxycblt.auxio.util.CopyleftNoticeTree
 import timber.log.Timber
 
@@ -55,6 +56,10 @@ class Auxio : Application() {
         } else if (BuildConfig.DEBUG) {
             Timber.plant(Timber.DebugTree())
         }
+
+        // Re-surface an update found (or downloaded) in a previous session before any UI can
+        // read the registry.
+        UpdateManager.restore(this)
 
         // Migrate any settings that may have changed in an app update.
         imageSettings.migrate()
