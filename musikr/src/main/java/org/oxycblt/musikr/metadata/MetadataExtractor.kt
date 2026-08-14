@@ -50,7 +50,7 @@ private class MetadataExtractorImpl(private val contentResolver: ContentResolver
         withContext(Dispatchers.IO) {
             contentResolver.openFileDescriptor(deviceFile.uri, "r")?.use { fd ->
                 val fis = FileInputStream(fd.fileDescriptor)
-                TagLibJNI.open(deviceFile, fis).also { fis.close() }
+                TagLibJNI.open(requireNotNull(deviceFile.path.name), fis).also { fis.close() }
             } ?: MetadataResult.ProviderFailed
         }
 }
