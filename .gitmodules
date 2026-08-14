@@ -6,4 +6,4 @@
 [submodule "musikr/src/main/cpp/taglib"]
 	path = musikr/src/main/cpp/taglib
 	url = https://github.com/LhacenMed/taglib.git
-	tag = ee1931b
+	branch = auxio-vendor
