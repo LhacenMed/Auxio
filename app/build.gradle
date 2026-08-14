@@ -15,7 +15,7 @@ ext.currentVersion = [
     type        : "Stable",
     versionMajor: 4,
     versionMinor: 1,
-    versionPatch: 5,
+    versionPatch: 6,
     versionBuild: 0,
 ]
 
