@@ -27,6 +27,7 @@ import dagger.hilt.components.SingletonComponent
 import javax.inject.Singleton
 import org.oxycblt.musikr.cache.MutableCache
 import org.oxycblt.musikr.cache.db.MutableDBCache
+import org.oxycblt.musikr.lyrics.LyricsExtractor
 import org.oxycblt.musikr.playlist.db.StoredPlaylists
 
 @Module
@@ -39,4 +40,8 @@ class MusikrShimModule {
     @Singleton
     @Provides
     fun storedPlaylists(@ApplicationContext context: Context) = StoredPlaylists.from(context)
+
+    @Singleton
+    @Provides
+    fun lyricsExtractor(@ApplicationContext context: Context) = LyricsExtractor.from(context)
 }

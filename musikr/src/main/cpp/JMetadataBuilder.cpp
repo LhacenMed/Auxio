@@ -20,9 +20,14 @@
 
 #include "util.h"
 
+#include <cstdio>
+#include <string>
+
 #include <taglib/mp4tag.h>
 #include <taglib/textidentificationframe.h>
 #include <taglib/attachedpictureframe.h>
+#include <taglib/unsynchronizedlyricsframe.h>
+#include <taglib/synchronizedlyricsframe.h>
 
 #include <taglib/tpropertymap.h>
 
@@ -49,6 +54,17 @@ void JMetadataBuilder::setId3v1(TagLib::ID3v1::Tag &tag) {
     if (genreNumber != 255) {
         id3v2.add_id("TCON", std::to_string(genreNumber));
     }
+}
+
+// SYLT is serialized into LRC so that the Kotlin side only has to implement one
+// synchronized lyrics parser, which it needs anyway for the LRC text that taggers
+// routinely write into the plain lyrics fields of every other format.
+static void appendLrcTimestamp(std::string &out, unsigned int ms) {
+    unsigned int centis = ms / 10;
+    char stamp[16];
+    std::snprintf(stamp, sizeof(stamp), "[%02u:%02u.%02u]", centis / 6000,
+            (centis / 100) % 60, centis % 100);
+    out.append(stamp);
 }
 
 void JMetadataBuilder::setId3v2(TagLib::ID3v2::Tag &tag) {
@@ -81,6 +97,29 @@ void JMetadataBuilder::setId3v2(TagLib::ID3v2::Tag &tag) {
                             == TagLib::ID3v2::AttachedPictureFrame::FrontCover) {
                 frontCoverPic = pictureFrame;
             }
+        } else if (auto usltFrame =
+                dynamic_cast<TagLib::ID3v2::UnsynchronizedLyricsFrame*>(frame)) {
+            TagLib::String lyrics = usltFrame->text();
+            if (lyrics.isEmpty())
+                continue;
+            id3v2.add_id("USLT", lyrics);
+        } else if (auto syltFrame =
+                dynamic_cast<TagLib::ID3v2::SynchronizedLyricsFrame*>(frame)) {
+            // Frame-based timestamps can't be converted without the stream's frame
+            // rate, so only millisecond timestamps are usable.
+            if (syltFrame->timestampFormat()
+                    != TagLib::ID3v2::SynchronizedLyricsFrame::AbsoluteMilliseconds)
+                continue;
+            auto synchedText = syltFrame->synchedText();
+            std::string lrc;
+            for (const auto &entry : synchedText) {
+                appendLrcTimestamp(lrc, entry.time);
+                lrc.append(entry.text.to8Bit(true));
+                lrc.append("\n");
+            }
+            if (lrc.empty())
+                continue;
+            id3v2.add_id("SYLT", TagLib::String(lrc, TagLib::String::UTF8));
         } else {
             continue;
         }

@@ -26,6 +26,7 @@ import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
 import org.oxycblt.auxio.list.ListSettings
 import org.oxycblt.auxio.list.adapter.UpdateInstructions
@@ -36,6 +37,7 @@ import org.oxycblt.auxio.playback.state.Progression
 import org.oxycblt.auxio.playback.state.QueueChange
 import org.oxycblt.auxio.playback.state.RepeatMode
 import org.oxycblt.auxio.playback.state.ShuffleMode
+import org.oxycblt.auxio.playback.ui.lyrics.LyricsState
 import org.oxycblt.auxio.util.Event
 import org.oxycblt.auxio.util.MutableEvent
 import org.oxycblt.musikr.Album
@@ -44,6 +46,7 @@ import org.oxycblt.musikr.Genre
 import org.oxycblt.musikr.MusicParent
 import org.oxycblt.musikr.Playlist
 import org.oxycblt.musikr.Song
+import org.oxycblt.musikr.lyrics.LyricsExtractor
 import timber.log.Timber as L
 
 /**
@@ -61,6 +64,7 @@ constructor(
     private val playbackSettings: PlaybackSettings,
     private val commandFactory: PlaybackCommand.Factory,
     private val listSettings: ListSettings,
+    private val lyricsExtractor: LyricsExtractor,
 ) : ViewModel(), PlaybackStateManager.Listener, PlaybackSettings.Listener {
     private var lastPositionJob: Job? = null
 
@@ -68,6 +72,11 @@ constructor(
     /** The currently playing song. */
     val song: StateFlow<Song?>
         get() = _song
+
+    private val _lyrics = MutableStateFlow<LyricsState>(LyricsState.Empty)
+    /** The lyrics of the currently playing song. */
+    val lyrics: StateFlow<LyricsState>
+        get() = _lyrics
 
     private val _parent = MutableStateFlow<MusicParent?>(null)
     /** The [MusicParent] currently being played. Null if playback is occurring from all songs. */
@@ -131,6 +140,19 @@ constructor(
     init {
         playbackManager.addListener(this)
         playbackSettings.registerListener(this)
+        // Lyrics are a pure function of the current song, so derive them from it directly.
+        // collectLatest cancels an in-flight read the moment the song changes, which keeps
+        // rapid queue scrubbing from ever showing the wrong song's lyrics.
+        viewModelScope.launch { _song.collectLatest(::loadLyrics) }
+    }
+
+    private suspend fun loadLyrics(song: Song?) {
+        if (song == null) {
+            _lyrics.value = LyricsState.Empty
+            return
+        }
+        _lyrics.value = LyricsState.Loading
+        _lyrics.value = lyricsExtractor.extract(song)?.let(LyricsState::Loaded) ?: LyricsState.Empty
     }
 
     override fun onCleared() {

@@ -45,6 +45,7 @@ import org.oxycblt.auxio.music.resolveNames
 import org.oxycblt.auxio.playback.queue.QueueViewModel
 import org.oxycblt.auxio.playback.state.RepeatMode
 import org.oxycblt.auxio.playback.ui.StyledSeekBar
+import org.oxycblt.auxio.playback.ui.lyrics.LyricsState
 import org.oxycblt.auxio.playback.ui.stepper.Direction
 import org.oxycblt.auxio.playback.ui.stepper.StepperOverlay
 import org.oxycblt.auxio.playback.ui.swiper.CarouselTransformer
@@ -179,6 +180,7 @@ class PlaybackPanelFragment :
         collectImmediately(playbackModel.repeatMode, ::updateRepeat)
         collectImmediately(playbackModel.isPlaying, ::updatePlaying)
         collectImmediately(playbackModel.isShuffled, ::updateShuffled)
+        collectImmediately(playbackModel.lyrics, ::updateLyrics)
         collectImmediately(playbackModel.pagerQueue, ::updatePager)
     }
 
@@ -279,7 +281,17 @@ class PlaybackPanelFragment :
     }
 
     private fun updatePosition(positionDs: Long) {
-        requireBinding().playbackSeekBar?.positionDs = positionDs
+        val binding = requireBinding()
+        binding.playbackSeekBar?.positionDs = positionDs
+        // The position flow already ticks every deci-second, which is more than enough
+        // resolution to follow synced lyrics without a timer of their own.
+        binding.playbackLyrics?.seekTo(positionDs.dsToMs())
+    }
+
+    private fun updateLyrics(state: LyricsState) {
+        // Lyrics can finish loading while paused, so seed the active line from the current
+        // position instead of waiting for the next tick.
+        requireBinding().playbackLyrics?.update(state, playbackModel.positionDs.value.dsToMs())
     }
 
     private fun updateRepeat(repeatMode: RepeatMode) {

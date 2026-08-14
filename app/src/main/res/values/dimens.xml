@@ -15,6 +15,11 @@
     <dimen name="size_touchable_huge">80dp</dimen>
     <dimen name="size_fast_scroll_popup">96dp</dimen>
 
+    <!-- The lyrics section is a fixed three-line window, so the panel layout is identical
+         whether the playing song has lyrics or not. -->
+    <dimen name="size_lyric_line">26dp</dimen>
+    <dimen name="size_lyrics_section">78dp</dimen>
+
     <dimen name="size_hero_small">128dp</dimen>
     <dimen name="size_hero_medium">192dp</dimen>
     <dimen name="size_hero_large">256dp</dimen>

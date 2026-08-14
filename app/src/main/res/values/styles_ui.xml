@@ -276,6 +276,19 @@
         <item name="android:textAppearance">?attr/textAppearanceBodySmall</item>
     </style>
 
+    <style name="Widget.Auxio.TextView.Lyric" parent="Widget.Auxio.TextView.Base">
+        <item name="android:maxLines">1</item>
+        <item name="android:ellipsize">end</item>
+        <item name="android:gravity">center_vertical</item>
+        <item name="android:textAppearance">?attr/textAppearanceBodyMedium</item>
+        <item name="android:textColor">@color/sel_lyric_line</item>
+    </style>
+
+    <style name="Widget.Auxio.TextView.Lyric.Placeholder" parent="Widget.Auxio.TextView.Lyric">
+        <item name="android:textColor">?android:attr/textColorSecondary</item>
+        <item name="android:alpha">0.6</item>
+    </style>
+
     <style name="Widget.Auxio.TextView.Header" parent="Widget.Auxio.TextView.Base">
         <item name="android:paddingStart">@dimen/spacing_medium</item>
         <item name="android:paddingTop">@dimen/spacing_small</item>
