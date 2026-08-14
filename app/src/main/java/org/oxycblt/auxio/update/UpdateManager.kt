@@ -15,7 +15,7 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
-
+ 
 package org.oxycblt.auxio.update
 
 import android.content.Context
@@ -37,7 +37,8 @@ object UpdateManager {
     fun restore(context: Context) {
         val appCtx = context.applicationContext
 
-        // 1. Staged APK — kept only when it is a newer, not-yet-installed build (else deleted here).
+        // 1. Staged APK — kept only when it is a newer, not-yet-installed build (else deleted
+        // here).
         val staged = ApkDownloader.stagedUpdate(appCtx)
 
         // 2. Persisted manifest — valid only while it still points past the running build.
@@ -48,7 +49,9 @@ object UpdateManager {
         //    staged APK's own version info so a download finished last session can still install.
         val available =
             saved
-                ?: staged?.let { AppUpdate(it.versionCode, it.versionName, apkUrl = "", notes = "") }
+                ?: staged?.let {
+                    AppUpdate(it.versionCode, it.versionName, apkUrl = "", notes = "")
+                }
                 ?: return
 
         UpdateRegistry.setAvailable(available)

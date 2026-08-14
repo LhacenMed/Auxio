@@ -15,7 +15,7 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
-
+ 
 package org.oxycblt.auxio.update
 
 import android.app.Notification
@@ -213,9 +213,14 @@ class UpdateService : Service() {
         private const val NOTIF_RESULT = 4201
         private const val ACTION_CANCEL = "org.oxycblt.auxio.update.action.CANCEL"
 
-        /** Starts the APK download for the update in [UpdateRegistry] (no-op if already running). */
+        /**
+         * Starts the APK download for the update in [UpdateRegistry] (no-op if already running).
+         */
         fun start(context: Context) {
-            ContextCompat.startForegroundService(context, Intent(context, UpdateService::class.java))
+            ContextCompat.startForegroundService(
+                context,
+                Intent(context, UpdateService::class.java),
+            )
         }
 
         /** Requests cancellation of the in-flight download. */

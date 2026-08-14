@@ -15,7 +15,7 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
-
+ 
 package org.oxycblt.auxio.update
 
 import android.os.Build
@@ -32,9 +32,9 @@ import org.oxycblt.auxio.util.collectImmediately
  * Prompt that walks the user through downloading and installing a newer build, mirroring the live
  * [UpdateState] as it goes.
  *
- * Dismissing during a download deliberately leaves the foreground service running — the notification
- * carries the progress from there, and re-opening the dialog re-reads the same flow, resuming where
- * it left off.
+ * Dismissing during a download deliberately leaves the foreground service running — the
+ * notification carries the progress from there, and re-opening the dialog re-reads the same flow,
+ * resuming where it left off.
  *
  * @author Alexander Capehart (OxygenCobalt)
  */
@@ -90,8 +90,7 @@ class UpdateDialog : ViewBindingMaterialDialogFragment<DialogUpdateBinding>() {
 
         when (state) {
             is UpdateState.Downloading -> binding.updateStatus.text = state.log
-            UpdateState.Connecting ->
-                binding.updateStatus.setText(R.string.lbl_update_connecting)
+            UpdateState.Connecting -> binding.updateStatus.setText(R.string.lbl_update_connecting)
             is UpdateState.Downloaded -> binding.updateStatus.setText(R.string.lbl_update_ready)
             is UpdateState.Error -> binding.updateStatus.setText(R.string.err_update_failed)
             UpdateState.Idle -> binding.updateStatus.text = ""

@@ -15,7 +15,7 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
-
+ 
 package org.oxycblt.auxio.update
 
 import android.content.Context
@@ -34,8 +34,7 @@ object UpdateStore {
     private const val PREFS = "auxio_update"
     private const val KEY_UPDATE = "available"
 
-    private fun prefs(context: Context) =
-        context.getSharedPreferences(PREFS, Context.MODE_PRIVATE)
+    private fun prefs(context: Context) = context.getSharedPreferences(PREFS, Context.MODE_PRIVATE)
 
     fun save(context: Context, update: AppUpdate) {
         prefs(context).edit { putString(KEY_UPDATE, update.toJson()) }

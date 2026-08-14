@@ -101,8 +101,8 @@ class MainActivity : AppCompatActivity() {
 
     /**
      * Look for a newer build and let [UpdateDialog] speak for whatever is found. The check is
-     * best-effort and never blocks startup; the prompt is driven off [UpdateRegistry] so a
-     * download already in flight is picked back up rather than restarted.
+     * best-effort and never blocks startup; the prompt is driven off [UpdateRegistry] so a download
+     * already in flight is picked back up rather than restarted.
      */
     private fun setupUpdates() {
         if (UpdatePrefs.autoCheckEnabled(this)) {

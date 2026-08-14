@@ -15,7 +15,7 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
-
+ 
 package org.oxycblt.auxio.update
 
 import java.io.File
@@ -24,8 +24,8 @@ import java.io.File
  * Lifecycle of the in-app APK update. There is only ever one update in flight, so this is a single
  * global state rather than a keyed map.
  *
- * [Downloading.progress] — 0f–1f once Content-Length is known, null before that.
- * [Downloading.log] — human-readable size line shown in the dialog and the notification.
+ * [Downloading.progress] — 0f–1f once Content-Length is known, null before that. [Downloading.log]
+ * — human-readable size line shown in the dialog and the notification.
  */
 sealed class UpdateState {
     data object Idle : UpdateState()

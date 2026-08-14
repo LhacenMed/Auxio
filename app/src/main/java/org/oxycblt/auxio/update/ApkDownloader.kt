@@ -15,7 +15,7 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
-
+ 
 package org.oxycblt.auxio.update
 
 import android.content.Context
@@ -120,7 +120,8 @@ object ApkDownloader {
 
     /**
      * Opens a connection to [url], manually following cross-host redirects (Android's
-     * HttpURLConnection only auto-follows same-host ones — GitHub release assets redirect to a CDN).
+     * HttpURLConnection only auto-follows same-host ones — GitHub release assets redirect to a
+     * CDN).
      */
     private fun openWithRedirects(url: String): HttpURLConnection {
         var location = url
