@@ -23,29 +23,27 @@ import androidx.recyclerview.widget.RecyclerView
 import org.oxycblt.auxio.databinding.ItemCoverBinding
 import org.oxycblt.auxio.list.adapter.FlexibleListAdapter
 import org.oxycblt.auxio.list.adapter.SimpleDiffCallback
-import org.oxycblt.auxio.playback.ui.stepper.StepperOverlay
 import org.oxycblt.auxio.util.inflater
 import org.oxycblt.musikr.Song
 
 /**
- * A [FlexibleListAdapter] that hosts [CoverViewHolder]s containing a [Song]'s cover and step
- * gesture overlays.
+ * A [FlexibleListAdapter] that hosts [CoverViewHolder]s containing a [Song]'s cover.
  *
- * @param listener The [StepperOverlay.Listener] that step gesture events will be forwarded to
+ * @param onCoverClick Called when a cover is clicked.
  * @author Alexander Capehart (OxygenCobalt)
  */
-class CoverPagerAdapter(private val listener: StepperOverlay.Listener) :
+class CoverPagerAdapter(private val onCoverClick: () -> Unit) :
     FlexibleListAdapter<Song, CoverViewHolder>(CoverViewHolder.DIFF_CALLBACK) {
 
     override fun onCreateViewHolder(parent: ViewGroup, pos: Int) = CoverViewHolder.from(parent)
 
     override fun onBindViewHolder(viewHolder: CoverViewHolder, pos: Int) {
-        viewHolder.bind(currentList[pos], listener)
+        viewHolder.bind(currentList[pos], onCoverClick)
     }
 }
 
 /**
- * A [RecyclerView.ViewHolder] that displays a [Song]'s cover and step gesture overlays.
+ * A [RecyclerView.ViewHolder] that displays a [Song]'s cover.
  *
  * @author Alexander Capehart (OxygenCobalt)
  */
@@ -55,11 +53,11 @@ class CoverViewHolder private constructor(private val binding: ItemCoverBinding)
      * Bind new data to this instance.
      *
      * @param song The new [Song] to bind.
-     * @param listener An [StepperOverlay.Listener] to bind fast seek interactions to.
+     * @param onCoverClick Called when this cover is clicked.
      */
-    fun bind(song: Song, listener: StepperOverlay.Listener) {
+    fun bind(song: Song, onCoverClick: () -> Unit) {
         binding.cover.bind(song)
-        binding.coverFastSeekOverlay.listener = listener
+        binding.root.setOnClickListener { onCoverClick() }
     }
 
     companion object {

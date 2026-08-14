@@ -47,8 +47,6 @@ import org.oxycblt.auxio.playback.queue.QueueViewModel
 import org.oxycblt.auxio.playback.state.RepeatMode
 import org.oxycblt.auxio.playback.ui.StyledSeekBar
 import org.oxycblt.auxio.playback.ui.lyrics.LyricsState
-import org.oxycblt.auxio.playback.ui.stepper.Direction
-import org.oxycblt.auxio.playback.ui.stepper.StepperOverlay
 import org.oxycblt.auxio.playback.ui.swiper.CarouselTransformer
 import org.oxycblt.auxio.playback.ui.swiper.CoverPagerAdapter
 import org.oxycblt.auxio.playback.ui.swiper.UserAwarePagerCallback
@@ -75,9 +73,8 @@ import timber.log.Timber as L
 class PlaybackPanelFragment :
     ViewBindingFragment<FragmentPlaybackPanelBinding>(),
     Toolbar.OnMenuItemClickListener,
-    StyledSeekBar.Listener,
-    StepperOverlay.Listener {
-    private val coverPagerAdapter = CoverPagerAdapter(this)
+    StyledSeekBar.Listener {
+    private val coverPagerAdapter = CoverPagerAdapter { setLyricsExpanded(true) }
     private val playbackModel: PlaybackViewModel by activityViewModels()
     private val detailModel: DetailViewModel by activityViewModels()
     private val listModel: ListViewModel by activityViewModels()
@@ -137,7 +134,6 @@ class PlaybackPanelFragment :
             offscreenPageLimit = 1
         }
 
-        // Set up fast seek overlay
         binding.playbackSong.apply {
             isSelected = true
             setOnClickListener { navigateToCurrentSong() }
@@ -448,17 +444,6 @@ class PlaybackPanelFragment :
 
     private fun navigateToCurrentAlbum() {
         playbackModel.song.value?.let { detailModel.showAlbum(it.album) }
-    }
-
-    override fun onSingleTap() {
-        setLyricsExpanded(true)
-    }
-
-    override fun seek(direction: Direction) {
-        when (direction) {
-            Direction.FORWARDS -> playbackModel.stepForward()
-            Direction.BACKWARDS -> playbackModel.stepBackwards()
-        }
     }
 
     private companion object {
