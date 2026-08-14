@@ -20,16 +20,22 @@ package org.oxycblt.auxio.settings
 
 import android.os.Bundle
 import androidx.fragment.app.activityViewModels
+import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.findNavController
 import androidx.preference.Preference
 import androidx.preference.PreferenceFragmentCompat
 import com.google.android.material.transition.MaterialFadeThrough
 import com.google.android.material.transition.MaterialSharedAxis
 import dagger.hilt.android.AndroidEntryPoint
+import kotlinx.coroutines.launch
 import org.oxycblt.auxio.R
 import org.oxycblt.auxio.music.MusicViewModel
 import org.oxycblt.auxio.settings.ui.WrappedDialogPreference
+import org.oxycblt.auxio.update.UpdateChecker
+import org.oxycblt.auxio.update.UpdateRegistry
+import org.oxycblt.auxio.update.UpdateStore
 import org.oxycblt.auxio.util.navigateSafe
+import org.oxycblt.auxio.util.showToast
 import timber.log.Timber as L
 
 /**
@@ -84,9 +90,28 @@ class RootPreferenceFragment : BasePreferenceFragment(R.xml.preferences_root) {
             }
             getString(R.string.set_key_reindex) -> musicModel.refresh()
             getString(R.string.set_key_rescan) -> musicModel.rescan()
+            getString(R.string.set_key_check_update) -> checkForUpdate()
             else -> return super.onPreferenceTreeClick(preference)
         }
 
         return true
+    }
+
+    /**
+     * Look for a newer build on demand. Asking explicitly always gets an answer: a found update is
+     * handed to [UpdateRegistry.requestPrompt], which raises the dialog even when automatic checks
+     * are off, and being already up to date is said out loud rather than passed over in silence.
+     */
+    private fun checkForUpdate() {
+        viewLifecycleOwner.lifecycleScope.launch {
+            val update = UpdateChecker.check()
+            if (update == null) {
+                requireContext().showToast(R.string.lbl_update_none)
+                return@launch
+            }
+            UpdateStore.save(requireContext(), update)
+            UpdateRegistry.setAvailable(update)
+            UpdateRegistry.requestPrompt()
+        }
     }
 }

@@ -10,6 +10,9 @@
     <string name="set_key_black_theme" translatable="false">KEY_BLACK_THEME</string>
     <string name="set_key_accent" translatable="false">auxio_accent2</string>
 
+    <string name="set_key_auto_update" translatable="false">auxio_auto_update</string>
+    <string name="set_key_check_update" translatable="false">auxio_check_update</string>
+
     <string name="set_key_reindex" translatable="false">auxio_reindex</string>
     <string name="set_key_rescan" translatable="false">auxio_rescan</string>
     <string name="set_key_observing" translatable="false">auxio_observing</string>
