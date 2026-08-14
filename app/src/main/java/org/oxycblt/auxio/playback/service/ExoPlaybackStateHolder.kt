@@ -666,7 +666,7 @@ class ExoPlaybackStateHolder(
                         DefaultAudioSink.Builder(context)
                             .setAudioProcessors(arrayOf(replayGainProcessor))
                             .build(),
-                    ),
+                    )
                 )
             }
 
