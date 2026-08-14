@@ -9,6 +9,10 @@ release/
 .DS_Store/
 captures/
 
+# Signing
+*.jks
+keystore.properties
+
 # Other
 .externalNativeBuild
 *.iml
