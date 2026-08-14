@@ -19,6 +19,10 @@ dependencyResolutionManagement {
 
 gradle.ext.androidxMediaModulePrefix = 'media-'
 gradle.ext.androidxMediaProjectName = 'media-'
+// LOCAL ONLY: the ffmpeg decoder cross-compiles via a POSIX shell script and cannot
+// be built on Windows. Disabling it drops software FLAC/ALAC decoding; playback falls
+// back to the platform codecs. Set to true (and build on Linux/macOS/WSL) to restore.
+gradle.ext.androidxMediaEnableFfmpegModule = false
 apply from: file("media/core_settings.gradle")
 
 rootProject.name = "Auxio"
