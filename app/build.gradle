@@ -14,8 +14,8 @@ plugins {
 ext.currentVersion = [
     type        : "Stable",
     versionMajor: 4,
-    versionMinor: 1,
-    versionPatch: 6,
+    versionMinor: 2,
+    versionPatch: 0,
     versionBuild: 0,
 ]
 
